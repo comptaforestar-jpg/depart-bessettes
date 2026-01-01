@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Je pars de Bessettes — Checklist (Firebase)</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --card:#0f172a;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --line: rgba(255,255,255,.10);
+      --accent:#7c3aed;
+      --shadow: 0 18px 45px rgba(0,0,0,.45);
+      --r:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      background:
+        radial-gradient(900px 420px at 15% 0%, rgba(124,58,237,.22), transparent 60%),
+        radial-gradient(900px 420px at 95% 10%, rgba(59,130,246,.14), transparent 55%),
+        var(--bg);
+      color:var(--text);
+      padding: 18px;
+    }
+    .wrap{max-width:980px; margin:0 auto;}
+    h1{margin:0 0 10px 0; letter-spacing:.2px}
+    .topbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:12px;}
+    .badge{font-size:12px; color:var(--muted);}
+    .grid{display:grid; grid-template-columns: 1.25fr .75fr; gap:14px;}
+    @media (max-width: 900px){ .grid{grid-template-columns:1fr;} }
+    .card{
+      background: linear-gradient(to bottom, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--line);
+      border-radius:var(--r);
+      box-shadow:var(--shadow);
+      padding:12px;
+      backdrop-filter: blur(6px);
+    }
+    .card h2{margin:0 0 10px 0; font-size:14px; color:var(--muted); font-weight:800; letter-spacing:.25px; text-transform:uppercase;}
+    .addrow{display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;}
+    input[type=text]{
+      flex:1; min-width:220px; padding:10px 12px; border-radius:12px;
+      border:1px solid var(--line); background: rgba(255,255,255,.03); color:var(--text);
+      outline:none;
+    }
+    input[type=text]::placeholder{color: rgba(229,231,235,.55);}
+    input[type=text]:focus{border-color: rgba(124,58,237,.55); box-shadow: 0 0 0 4px rgba(124,58,237,.16);}
+    input[type=file]{
+      border:1px dashed rgba(255,255,255,.20);
+      padding:8px;
+      border-radius:12px;
+      min-width:220px;
+      color:var(--muted);
+      background: rgba(255,255,255,.02);
+    }
+    button{
+      padding:10px 14px; border-radius:12px; border:1px solid transparent;
+      background:var(--accent); color:white; cursor:pointer; font-weight:800;
+      transition: transform .12s ease, filter .12s ease, background .12s ease, border-color .12s ease;
+    }
+    button:hover{transform: translateY(-1px); filter:brightness(1.03);}
+    button.secondary{
+      background: rgba(255,255,255,.06);
+      border-color: rgba(255,255,255,.10);
+      color: var(--text);
+    }
+    button.secondary:hover{background: rgba(255,255,255,.08);}
+    button.ghost{
+      background: transparent;
+      border-color: rgba(255,255,255,.14);
+      color: var(--text);
+    }
+    .task{
+      display:flex; align-items:center; gap:10px;
+      padding:10px; border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    .task:last-child{border-bottom:none;}
+    .task.done{opacity:.55; text-decoration:line-through;}
+    .task input[type=checkbox]{accent-color: var(--accent); width:18px; height:18px;}
+    img{width:48px; height:48px; object-fit:cover; border-radius:10px; border:1px solid rgba(255,255,255,.12);}
+    .bar{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; align-items:center; justify-content:space-between;}
+    .small{color:var(--muted); font-size:12px;}
+    textarea{
+      width:100%;
+      min-height:130px;
+      resize:vertical;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      color: var(--text);
+      outline:none;
+      line-height:1.35;
+    }
+    textarea::placeholder{color: rgba(229,231,235,.55);}
+    textarea:focus{border-color: rgba(124,58,237,.55); box-shadow: 0 0 0 4px rgba(124,58,237,.16);}
+    .noteHint{margin-top:8px; color:var(--muted); font-size:12px;}
+    .row{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+    .statusDot{display:inline-block; width:9px; height:9px; border-radius:99px; background:#f59e0b; margin-right:8px; vertical-align:middle;}
+    .ok{background:#22c55e;}
+    .warn{background:#f59e0b;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <h1>🧳 Je pars de Bessettes</h1>
+        <div class="badge">
+          <span class="statusDot warn" id="cloudDot"></span>
+          <span id="cloudStatus">Cloud: non connecté</span>
+          <span id="userLabel"></span>
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="ghost" id="btnGoogle">🔐 Connexion Google</button>
+        <button class="ghost" id="btnLogout" style="display:none;">🚪 Déconnexion</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Checklist -->
+      <div class="card">
+        <h2>Checklist</h2>
+
+        <div class="addrow">
+          <input id="text" type="text" placeholder="Nouvelle tâche (ex: fermer l’eau, prendre les clés…)" />
+          <input id="photo" type="file" accept="image/*" />
+          <button onclick="addTask()">Ajouter</button>
+        </div>
+
+        <div id="list"></div>
+
+        <div class="bar">
+          <div class="small" id="counter">—</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="secondary" onclick="sendRecapViaFormspree()">📩 Envoyer le récap</button>
+            <button class="secondary" onclick="resetChecksOnly()">↩️ Tout décocher</button>
+          </div>
+        </div>
+
+        <div class="noteHint">
+          ✅ Pour synchroniser entre plusieurs PC : connecte-toi avec Google (bouton en haut).<br>
+          ⚠️ Tant que tu n'es pas connecté, ça reste en local sur cet appareil.
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="card">
+        <h2>Remarques</h2>
+        <textarea id="notes" placeholder="Ex: code alarme, contact voisin, infos importantes…"></textarea>
+        <div class="noteHint">Sauvegarde auto (local + cloud si connecté).</div>
+
+        <div style="height:12px;"></div>
+
+        <h2>À prendre la prochaine fois</h2>
+        <textarea id="nextTime" placeholder="Ex: rallonge, piles, gants, chargeur…"></textarea>
+        <div class="noteHint">Sauvegarde auto (local + cloud si connecté).</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ==================== CONFIG ====================
+// 1) Remplace FIREBASE_CONFIG par ta config Firebase (Console Firebase -> Project settings -> Web app)
+const FIREBASE_CONFIG = {
+  // apiKey: "…",
+  // authDomain: "…",
+  // projectId: "…",
+  // appId: "…",
+};
+
+// 2) Formspree (ton endpoint)
+const FORMSPREE_ENDPOINT = "https://formspree.io/f/xojvjwrn";
+
+// ==================== LOCAL STORAGE KEYS ====================
+const KEY_TASKS = 'bessettes_tasks_v2';
+const KEY_NOTES = 'bessettes_notes_v2';
+const KEY_NEXT  = 'bessettes_nexttime_v2';
+
+// ==================== STATE ====================
+let tasks = safeJson(localStorage.getItem(KEY_TASKS), []);
+let cloud = {
+  enabled: false,
+  ready: false,
+  user: null,
+  app: null,
+  auth: null,
+  db: null,
+  unsub: null,
+  suppressSnapshot: false,
+  debounceTimer: null,
+};
+
+function safeJson(raw, fallback){
+  try{
+    const v = JSON.parse(raw || 'null');
+    return (v === null || v === undefined) ? fallback : v;
+  }catch(e){
+    return fallback;
+  }
+}
+
+function saveLocal(){
+  localStorage.setItem(KEY_TASKS, JSON.stringify(tasks));
+}
+
+// ==================== UI RENDER ====================
+function render(){
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+
+  tasks.sort((a,b)=> (a.done - b.done));
+
+  tasks.forEach((t,i)=>{
+    const d = document.createElement('div');
+    d.className = 'task' + (t.done ? ' done' : '');
+    d.innerHTML =
+      '<input type="checkbox" ' + (t.done ? 'checked' : '') + ' onchange="toggle(' + i + ')">' +
+      (t.img ? '<img src="' + t.img + '" alt="photo tâche">' : '') +
+      '<span style="flex:1;">' + escapeHtml(t.text) + '</span>' +
+      '<button class="secondary" onclick="del(' + i + ')">❌</button>';
+    list.appendChild(d);
+  });
+
+  const done = tasks.filter(t=>t.done).length;
+  const total = tasks.length;
+  const left = total - done;
+  document.getElementById('counter').textContent = left + ' à faire • ' + done + ' faits • ' + total + ' total';
+
+  saveLocal();
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'",'&#039;');
+}
+
+// ==================== ACTIONS ====================
+function addTask(){
+  const text = document.getElementById('text').value.trim();
+  const file = document.getElementById('photo').files[0];
+  if(!text) return;
+
+  if(file){
+    const r = new FileReader();
+    r.onload = ()=>{
+      tasks.push({text:text, done:false, img:r.result});
+      document.getElementById('text').value = '';
+      document.getElementById('photo').value = '';
+      render();
+      saveCloudDebounced();
+    };
+    r.readAsDataURL(file);
+  }else{
+    tasks.push({text:text, done:false});
+    document.getElementById('text').value = '';
+    document.getElementById('photo').value = '';
+    render();
+    saveCloudDebounced();
+  }
+}
+
+function toggle(i){
+  tasks[i].done = !tasks[i].done;
+  render();
+  saveCloudDebounced();
+}
+
+function del(i){
+  const t = tasks[i];
+  const label = t && t.text ? t.text : 'cette tâche';
+  if(confirm('Supprimer "' + label + '" ?')){
+    tasks.splice(i,1);
+    render();
+    saveCloudDebounced();
+  }
+}
+
+function resetChecksOnly(){
+  if(tasks.length === 0) return;
+  if(confirm('Tout décocher ?')){
+    tasks.forEach(t => t.done = false);
+    render();
+    saveCloudDebounced();
+  }
+}
+
+// ==================== NOTES (LOCAL + CLOUD) ====================
+function loadNotes(){
+  document.getElementById('notes').value = localStorage.getItem(KEY_NOTES) || '';
+  document.getElementById('nextTime').value = localStorage.getItem(KEY_NEXT) || '';
+}
+
+function wireNotesAutosave(){
+  const notes = document.getElementById('notes');
+  const next  = document.getElementById('nextTime');
+
+  const save = () => {
+    localStorage.setItem(KEY_NOTES, notes.value || '');
+    localStorage.setItem(KEY_NEXT,  next.value  || '');
+    saveCloudDebounced();
+  };
+
+  notes.addEventListener('input', save);
+  next.addEventListener('input', save);
+}
+
+// ==================== EMAIL RECAP (FORMSPREE) ====================
+function buildRecap() {
+  const todo = tasks.filter(t => !t.done).map(t => "⬜ " + t.text);
+  const done = tasks.filter(t => t.done).map(t => "✅ " + t.text);
+
+  const notes = (localStorage.getItem(KEY_NOTES) || '').trim();
+  const next  = (localStorage.getItem(KEY_NEXT)  || '').trim();
+
+  let body = "Checklist — Je pars de Bessettes\n\n";
+  body += "À faire (" + todo.length + ")\n" + (todo.length ? todo.join("\n") : "—") + "\n\n";
+  body += "Fait (" + done.length + ")\n" + (done.length ? done.join("\n") : "—") + "\n\n";
+  body += "Remarques\n" + (notes ? notes : "—") + "\n\n";
+  body += "À prendre la prochaine fois\n" + (next ? next : "—") + "\n\n";
+  body += "Généré le : " + new Date().toLocaleString("fr-BE") + "\n";
+  return body;
+}
+
+async function sendRecapViaFormspree(){
+  const recap = buildRecap();
+
+  const payload = {
+    subject: "Checklist — Je pars de Bessettes",
+    message: recap,
+    source: "Checklist Bessettes"
+  };
+
+  try {
+    const res = await fetch(FORMSPREE_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if(res.ok){
+      tasks.forEach(t => t.done = false);
+      render();
+      saveCloudDebounced();
+      alert("Récap envoyé ✅ — checklist réinitialisée (tout décoché)");
+    } else {
+      const txt = await res.text().catch(()=> "");
+      alert("Erreur d'envoi ❌\n" + txt);
+    }
+  } catch (e) {
+    alert("Erreur réseau ❌\n" + (e && e.message ? e.message : e));
+  }
+}
+
+// ==================== FIREBASE (GOOGLE AUTH + FIRESTORE) ====================
+function setCloudStatus(ok, text, userEmail){
+  const dot = document.getElementById('cloudDot');
+  const label = document.getElementById('cloudStatus');
+  const u = document.getElementById('userLabel');
+
+  dot.classList.remove('ok','warn');
+  dot.classList.add(ok ? 'ok' : 'warn');
+  label.textContent = text;
+  u.textContent = userEmail ? (' — ' + userEmail) : '';
+}
+
+function isFirebaseConfigured(){
+  return FIREBASE_CONFIG && FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.projectId;
+}
+
+async function initFirebase(){
+  if(!isFirebaseConfigured()){
+    setCloudStatus(false, "Cloud: config Firebase manquante (voir FIREBASE_CONFIG)", "");
+    return;
+  }
+
+  const [{ initializeApp }, authMod, fsMod] = await Promise.all([
+    import("https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js"),
+    import("https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js"),
+    import("https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js"),
+  ]);
+
+  const { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } = authMod;
+  const { getFirestore, doc, setDoc, onSnapshot } = fsMod;
+
+  cloud.app  = initializeApp(FIREBASE_CONFIG);
+  cloud.auth = getAuth(cloud.app);
+  cloud.db   = getFirestore(cloud.app);
+  cloud.enabled = true;
+
+  const btnGoogle = document.getElementById('btnGoogle');
+  const btnLogout = document.getElementById('btnLogout');
+
+  btnGoogle.addEventListener('click', async () => {
+    try{
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(cloud.auth, provider);
+    }catch(e){
+      alert("Connexion Google impossible ❌\n" + (e && e.message ? e.message : e));
+    }
+  });
+
+  btnLogout.addEventListener('click', async () => {
+    try{ await signOut(cloud.auth); }
+    catch(e){ alert("Déconnexion impossible ❌\n" + (e && e.message ? e.message : e)); }
+  });
+
+  onAuthStateChanged(cloud.auth, (user) => {
+    cloud.user = user || null;
+
+    if(cloud.unsub){
+      try{ cloud.unsub(); }catch(e){}
+      cloud.unsub = null;
+    }
+
+    if(!user){
+      cloud.ready = false;
+      setCloudStatus(false, "Cloud: non connecté", "");
+      btnGoogle.style.display = "";
+      btnLogout.style.display = "none";
+      return;
+    }
+
+    btnGoogle.style.display = "none";
+    btnLogout.style.display = "";
+    setCloudStatus(true, "Cloud: connecté", user.email || user.uid);
+
+    const ref = doc(cloud.db, "users", user.uid, "bessettes", "main");
+
+    cloud.unsub = onSnapshot(ref, (snap) => {
+      if(!snap.exists()) return;
+      if(cloud.suppressSnapshot) return;
+
+      const data = snap.data() || {};
+      const newTasks = Array.isArray(data.tasks) ? data.tasks : [];
+      const notes = typeof data.notes === "string" ? data.notes : "";
+      const next  = typeof data.nextTime === "string" ? data.nextTime : "";
+
+      tasks = newTasks;
+      localStorage.setItem(KEY_TASKS, JSON.stringify(tasks));
+      localStorage.setItem(KEY_NOTES, notes);
+      localStorage.setItem(KEY_NEXT, next);
+
+      loadNotes();
+      render();
+      cloud.ready = true;
+    }, (err) => {
+      setCloudStatus(false, "Cloud: erreur Firestore", user.email || user.uid);
+      console.error(err);
+    });
+
+    saveCloudDebounced(true);
+  });
+}
+
+function makePayload(){
+  return {
+    tasks: tasks,
+    notes: (localStorage.getItem(KEY_NOTES) || ""),
+    nextTime: (localStorage.getItem(KEY_NEXT) || ""),
+    updatedAt: Date.now()
+  };
+}
+
+function saveCloudDebounced(force){
+  if(!cloud.enabled || !cloud.user || !cloud.db) return;
+  if(cloud.debounceTimer) clearTimeout(cloud.debounceTimer);
+  cloud.debounceTimer = setTimeout(() => saveCloudNow().catch(()=>{}), force ? 0 : 600);
+}
+
+async function saveCloudNow(){
+  if(!cloud.enabled || !cloud.user || !cloud.db) return;
+
+  const fsMod = await import("https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js");
+  const { doc, setDoc } = fsMod;
+
+  const ref = doc(cloud.db, "users", cloud.user.uid, "bessettes", "main");
+  const payload = makePayload();
+
+  cloud.suppressSnapshot = true;
+  await setDoc(ref, payload, { merge: true });
+  setTimeout(() => { cloud.suppressSnapshot = false; }, 400);
+}
+
+// ==================== INIT ====================
+document.getElementById('text').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') addTask();
+});
+
+loadNotes();
+wireNotesAutosave();
+render();
+initFirebase();
+</script>
+
+<!--
+IMPORTANT (Firebase):
+1) Colle ta config dans FIREBASE_CONFIG (Project settings -> Web app).
+2) Firebase Console:
+   - Authentication -> Sign-in method -> Active "Google"
+   - Firestore Database -> Create database
+3) Quand tu héberges (Netlify/GitHub Pages):
+   - Authentication -> Settings -> Authorized domains -> ajoute ton domaine
+4) Règles Firestore recommandées:
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /users/{userId}/{document=**} {
+         allow read, write: if request.auth != null && request.auth.uid == userId;
+       }
+     }
+   }
+Firebase CDN (docs): https://firebase.google.com/docs/web/alt-setup
+-->
+</body>
+</html>
