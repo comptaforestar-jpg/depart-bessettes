@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Je pars de Bessettes — Checklist</title>
+  <style>
+    /* ===== Dark page (par défaut) ===== */
+    :root{
+      --bg:#0b1020;
+      --card:#0f172a;
+      --card2:#0b1226;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --line: rgba(255,255,255,.10);
+      --accent:#7c3aed;
+      --shadow: 0 18px 45px rgba(0,0,0,.45);
+      --r:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      background:
+        radial-gradient(900px 420px at 15% 0%, rgba(124,58,237,.22), transparent 60%),
+        radial-gradient(900px 420px at 95% 10%, rgba(59,130,246,.14), transparent 55%),
+        var(--bg);
+      color:var(--text);
+      padding: 18px;
+    }
+    .wrap{max-width:920px; margin:0 auto;}
+    h1{margin:0 0 12px 0; letter-spacing:.2px}
+    .grid{display:grid; grid-template-columns: 1.25fr .75fr; gap:14px;}
+    @media (max-width: 900px){ .grid{grid-template-columns:1fr;} }
+    .card{
+      background: linear-gradient(to bottom, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--line);
+      border-radius:var(--r);
+      box-shadow:var(--shadow);
+      padding:12px;
+      backdrop-filter: blur(6px);
+    }
+    .card h2{margin:0 0 10px 0; font-size:14px; color:var(--muted); font-weight:800; letter-spacing:.25px; text-transform:uppercase;}
+    .addrow{display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;}
+    input[type=text]{
+      flex:1; min-width:220px; padding:10px 12px; border-radius:12px;
+      border:1px solid var(--line); background: rgba(255,255,255,.03); color:var(--text);
+      outline:none;
+    }
+    input[type=text]::placeholder{color: rgba(229,231,235,.55);}
+    input[type=text]:focus{border-color: rgba(124,58,237,.55); box-shadow: 0 0 0 4px rgba(124,58,237,.16);}
+
+    input[type=file]{
+      border:1px dashed rgba(255,255,255,.20);
+      padding:8px;
+      border-radius:12px;
+      min-width:220px;
+      color:var(--muted);
+      background: rgba(255,255,255,.02);
+    }
+
+    button{
+      padding:10px 14px; border-radius:12px; border:1px solid transparent;
+      background:var(--accent); color:white; cursor:pointer; font-weight:800;
+      transition: transform .12s ease, filter .12s ease;
+    }
+    button:hover{transform: translateY(-1px); filter:brightness(1.03);}
+    button.secondary{
+      background: rgba(255,255,255,.06);
+      border-color: rgba(255,255,255,.10);
+      color: var(--text);
+    }
+    button.secondary:hover{background: rgba(255,255,255,.08);}
+    .task{
+      display:flex; align-items:center; gap:10px;
+      padding:10px; border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    .task:last-child{border-bottom:none;}
+    .task.done{opacity:.55; text-decoration:line-through;}
+    .task input[type=checkbox]{accent-color: var(--accent); width:18px; height:18px;}
+    img{width:48px; height:48px; object-fit:cover; border-radius:10px; border:1px solid rgba(255,255,255,.12);}
+    .bar{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; align-items:center; justify-content:space-between;}
+    .small{color:var(--muted); font-size:12px;}
+
+    textarea{
+      width:100%;
+      min-height:130px;
+      resize:vertical;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      color: var(--text);
+      outline:none;
+      line-height:1.35;
+    }
+    textarea::placeholder{color: rgba(229,231,235,.55);}
+    textarea:focus{border-color: rgba(124,58,237,.55); box-shadow: 0 0 0 4px rgba(124,58,237,.16);}
+    .noteHint{margin-top:8px; color:var(--muted); font-size:12px;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>🧳 Je pars de Bessettes</h1>
+
+    <div class="grid">
+      <!-- Checklist -->
+      <div class="card">
+        <h2>Checklist</h2>
+
+        <div class="addrow">
+          <input id="text" type="text" placeholder="Nouvelle tâche (ex: fermer l’eau, prendre les clés…)" />
+          <input id="photo" type="file" accept="image/*" />
+          <button onclick="addTask()">Ajouter</button>
+        </div>
+
+        <div id="list"></div>
+
+        <div class="bar">
+          <div class="small" id="counter">—</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="secondary" onclick="sendRecapViaFormspree()">📩 Envoyer le récap</button>
+            <button class="secondary" onclick="resetChecksOnly()">↩️ Tout décocher</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="card">
+        <h2>Remarques</h2>
+        <textarea id="notes" placeholder="Ex: code alarme, contact voisin, infos importantes…"></textarea>
+        <div class="noteHint">Sauvegardé automatiquement sur cet appareil.</div>
+
+        <div style="height:12px;"></div>
+
+        <h2>À prendre la prochaine fois</h2>
+        <textarea id="nextTime" placeholder="Ex: rallonge, piles, gants, chargeur…"></textarea>
+        <div class="noteHint">Sauvegardé automatiquement sur cet appareil.</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ====== Storage keys ======
+const KEY_TASKS = 'bessettes';
+const KEY_NOTES = 'bessettes_notes';
+const KEY_NEXT  = 'bessettes_nexttime';
+
+// ====== Données ======
+let tasks = JSON.parse(localStorage.getItem(KEY_TASKS)||'[]');
+
+function saveTasks(){ localStorage.setItem(KEY_TASKS, JSON.stringify(tasks)); }
+
+// ====== UI ======
+function render(){
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+
+  // non cochées en haut
+  tasks.sort((a,b)=>a.done-b.done);
+
+  tasks.forEach((t,i)=>{
+    const d = document.createElement('div');
+    d.className = 'task' + (t.done ? ' done' : '');
+    d.innerHTML =
+      '<input type="checkbox" ' + (t.done ? 'checked' : '') + ' onchange="toggle(' + i + ')">' +
+      (t.img ? '<img src="' + t.img + '" alt="photo tâche">' : '') +
+      '<span style="flex:1;">' + escapeHtml(t.text) + '</span>' +
+      '<button class="secondary" onclick="del(' + i + ')">❌</button>';
+    list.appendChild(d);
+  });
+
+  const done = tasks.filter(t=>t.done).length;
+  const total = tasks.length;
+  const left = total - done;
+  document.getElementById('counter').textContent = left + ' à faire • ' + done + ' faits • ' + total + ' total';
+
+  saveTasks();
+}
+
+// Petit escape pour éviter d'injecter du HTML via le champ texte
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'",'&#039;');
+}
+
+// ====== Actions ======
+function addTask(){
+  const text = document.getElementById('text').value.trim();
+  const file = document.getElementById('photo').files[0];
+  if(!text) return;
+
+  if(file){
+    const r = new FileReader();
+    r.onload = ()=>{ tasks.push({text:text, done:false, img:r.result}); saveTasks(); render(); };
+    r.readAsDataURL(file);
+  }else{
+    tasks.push({text:text, done:false}); saveTasks(); render();
+  }
+  document.getElementById('text').value = '';
+  document.getElementById('photo').value = '';
+}
+
+function toggle(i){ tasks[i].done = !tasks[i].done; saveTasks(); render(); }
+
+function del(i){
+  const t = tasks[i];
+  const label = t && t.text ? t.text : 'cette tâche';
+  if(confirm('Supprimer "' + label + '" ?')){
+    tasks.splice(i,1);
+    saveTasks();
+    render();
+  }
+}
+
+// ====== Tout décocher ======
+function resetChecksOnly(){
+  if(tasks.length === 0) return;
+  if(confirm('Tout décocher ?')){
+    tasks.forEach(t => t.done = false);
+    saveTasks();
+    render();
+  }
+}
+
+// ====== Notes ======
+function loadNotes(){
+  document.getElementById('notes').value = localStorage.getItem(KEY_NOTES) || '';
+  document.getElementById('nextTime').value = localStorage.getItem(KEY_NEXT) || '';
+}
+function wireNotesAutosave(){
+  const notes = document.getElementById('notes');
+  const next  = document.getElementById('nextTime');
+
+  const save = () => {
+    localStorage.setItem(KEY_NOTES, notes.value || '');
+    localStorage.setItem(KEY_NEXT,  next.value  || '');
+  };
+
+  notes.addEventListener('input', save);
+  next.addEventListener('input', save);
+}
+
+// ====== Récap + Envoi Formspree ======
+function buildRecap() {
+  const todo = tasks.filter(t => !t.done).map(t => "⬜ " + t.text);
+  const done = tasks.filter(t => t.done).map(t => "✅ " + t.text);
+
+  const notes = (localStorage.getItem(KEY_NOTES) || '').trim();
+  const next  = (localStorage.getItem(KEY_NEXT)  || '').trim();
+
+  let body = "Checklist — Je pars de Bessettes\n\n";
+  body += "À faire (" + todo.length + ")\n" + (todo.length ? todo.join("\n") : "—") + "\n\n";
+  body += "Fait (" + done.length + ")\n" + (done.length ? done.join("\n") : "—") + "\n\n";
+
+  body += "Remarques\n" + (notes ? notes : "—") + "\n\n";
+  body += "À prendre la prochaine fois\n" + (next ? next : "—") + "\n\n";
+
+  body += "Généré le : " + new Date().toLocaleString("fr-BE") + "\n";
+  return body;
+}
+
+async function sendRecapViaFormspree(){
+  const ENDPOINT = "https://formspree.io/f/xojvjwrn";
+  const recap = buildRecap();
+
+  const payload = {
+    subject: "Checklist — Je pars de Bessettes",
+    message: recap,
+    source: "Checklist Bessettes"
+  };
+
+  try {
+    const res = await fetch(ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if(res.ok){
+      // Après envoi: on remet à zéro (tout décoché) — on garde les tâches + notes
+      tasks.forEach(t => t.done = false);
+      saveTasks();
+      render();
+      alert("Récap envoyé ✅ — checklist réinitialisée (tout décoché)");
+    } else {
+      const txt = await res.text().catch(()=> "");
+      alert("Erreur d'envoi ❌\n" + txt);
+    }
+  } catch (e) {
+    alert("Erreur réseau ❌\n" + (e && e.message ? e.message : e));
+  }
+}
+
+// Entrée clavier
+document.getElementById('text').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') addTask();
+});
+
+// Init
+loadNotes();
+wireNotesAutosave();
+render();
+</script>
+</body>
+</html>
